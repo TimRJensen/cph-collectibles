@@ -9,6 +9,7 @@ import Modal from "./Modal.vue";
 // props
 withDefaults(defineProps<{ data?: PosterResult }>(), {});
 // state
+const base = import.meta.env.VITE_BASE_URL;
 const modal = useTemplateRef("modal")
 const focus = ref(0);
 </script>
@@ -18,11 +19,11 @@ const focus = ref(0);
             <IconButton type="arrows-out" style="place-self: flex-end;" @click="modal?.$el.showModal()" />
         </div>
         <div :class="$style.imgbox">
-            <img :class="$style.img" :src="data?.files[focus]?.url" />
+            <img :class="$style.img" :src="base + data?.files[focus]?.url" />
         </div>
         <div :class="$style.list">
             <button v-for="(f, i) in data?.files" :class="[$style.button]" @click="focus = i">
-                <img :class="$style.img" :src="f.url" />
+                <img :class="$style.img" :src="base + f.url" />
             </button>
         </div>
         <Details :class="$style.details" :data />
