@@ -7,11 +7,11 @@
 
 localhost, dashboard.localhost {
 	handle /api/* {
-		reverse_proxy api:8080
+		reverse_proxy host.docker.internal:8080
 	}
 
-	handle /fs/* {
-		reverse_proxy fs:8081
+	handle_path /fs/* {
+		reverse_proxy host.docker.internal:8081
 	}
 
 	handle {
@@ -19,17 +19,17 @@ localhost, dashboard.localhost {
 	}
 }
 
-cph-collectables.com {
+cph-collectables.com, cph-collectibles-public.sliplane.app {
 	handle /api/* {
 		reverse_proxy cph-collectibles-api.internal:8080
 	}
 
-	handle /fs/* {
+	handle_path /fs/* {
 		reverse_proxy cph-collectibles-fs.internal:8081
 	}
 
 	handle {
-		root * /srv/site
+		root * /srv
 		encode zstd gzip
 		file_server
 	}
