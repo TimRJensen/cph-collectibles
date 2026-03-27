@@ -66,7 +66,7 @@ export type APIResult<E extends Endpoints>
     : never;
 
 
-const url = import.meta.env.VITE_API_URL;
+const url = import.meta.env.VITE_BASE_URL;
 
 export async function request<E extends Endpoints>(endpoint: E, method: string, body: any = null): Promise<APIResult<E>> {
     try {
