@@ -4,7 +4,6 @@ services/api/data/*
 
 # --- Node / Vite ---
 node_modules/
-dist/
 build/
 .vite/
 .cache/
