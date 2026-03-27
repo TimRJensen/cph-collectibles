@@ -70,7 +70,7 @@ const url = import.meta.env.VITE_API_URL;
 
 export async function request<E extends Endpoints>(endpoint: E, method: string, body: any = null): Promise<APIResult<E>> {
     try {
-        const response = await fetch("https://localhost" + endpoint, {
+        const response = await fetch(url + endpoint, {
             method,
             body,
         });

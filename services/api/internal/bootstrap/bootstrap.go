@@ -96,7 +96,7 @@ func SeedDB(p *db.Pool, cfg SeedConfig) error {
 		rec := files.Data{}
 		rec.Id = wrappers.ULID(ulid.Make())
 		rec.PosterId = wrappers.ULID(d.Id)
-		rec.URL = fmt.Sprintf("%s/assets/%s/%s.png", cfg.FSURL, id, raw)
+		rec.URL = fmt.Sprintf("/fs/assets/%s/%s.png", id, raw)
 
 		if err := files.Insert(tx, ctx, &rec); err != nil {
 			return fmt.Errorf("insert file row for %s: %w", raw, err)
