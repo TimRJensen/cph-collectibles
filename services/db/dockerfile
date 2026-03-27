@@ -1,4 +1,4 @@
-FROM dhi.io/postgres:18-alpine3.22
+FROM postgres:18-alpine
 
 COPY ./db/schema.sql /init/schema.sql
 COPY ./db/entrypoint.sh /usr/local/bin/entrypoint.sh
