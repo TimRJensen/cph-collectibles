@@ -36,19 +36,3 @@ cph-collectables.com, www.cph-collectables.com {
 		}
 	}
 }
-
-:80 {
-	handle /api/* {
-		reverse_proxy cph-collectables-api.internal:8080
-	}
-
-	handle_path /fs/* {
-		reverse_proxy cph-collectables-fs.internal:8081
-	}
-
-	handle {
-		root * /srv
-		encode zstd gzip
-		file_server
-	}
-}
