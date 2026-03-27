@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 )
@@ -8,7 +9,8 @@ import (
 func WithCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("origin")
-		if origin == os.Getenv("APP_HOST") {
+		host := os.Getenv("APP_HOST")
+		if origin == fmt.Sprintf("https://%s", host) || origin == fmt.Sprintf("https://www.%s", host) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
 		}
