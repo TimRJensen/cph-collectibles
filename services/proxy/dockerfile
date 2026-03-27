@@ -1,6 +1,6 @@
 FROM caddy:2.11-alpine
 
-COPY proxy/Caddyfile /etc/caddy/Caddyfile
+COPY services/proxy/Caddyfile /etc/caddy/Caddyfile
 COPY app/web/dist /srv
 
 EXPOSE 80
