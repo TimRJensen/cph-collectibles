@@ -12,7 +12,6 @@ withDefaults(defineProps<{ showTotal?: boolean }>(), {
 const popover = useTemplateRef("popover");
 defineExpose({ dom: popover });
 // state
-const base = import.meta.env.VITE_BASE_URL;
 const items = ref<Array<PosterResult>>([]);
 watch(CartStore.len, () => {
     items.value = CartStore.read();
@@ -22,7 +21,7 @@ watch(CartStore.len, () => {
 <template>
     <div :class="$style.container">
         <div v-for="data in items" :class="$style.list">
-            <img :class="$style.img" :src="base + data.files[0]?.url" />
+            <img :class="$style.img" :src="data.files[0]?.url" />
             <span :class="$style.label">{{ data.detail.heading }}</span>
             <span :class="[$style.label, $style.price]">{{ data.cost.rawTotal }}&#163;</span>
             <IconButton :class="$style.delete" type="delete" fill="#1e1b18" @click="CartStore.remove(data)" />

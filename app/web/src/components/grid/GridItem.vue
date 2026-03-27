@@ -6,7 +6,6 @@ import type { PosterResult } from "../../util/request";
 // props
 const $props = withDefaults(defineProps<{ data: PosterResult }>(), {});
 // state
-const base = import.meta.env.VITE_BASE_URL;
 const card = useTemplateRef("card")
 const cols = ref(1);
 const rows = ref(1);
@@ -29,7 +28,7 @@ async function onLoad(_e: Event) {
         :to="{ name: 'poster', params: { id: data.id } }">
         <button :class="$style.button">
             <div :class="$style.media">
-                <img ref="card" :class="$style.img" :src="base + data.files[0]?.url" @load="onLoad" />
+                <img ref="card" :class="$style.img" :src="data.files[0]?.url" @load="onLoad" />
             </div>
             <!-- <span :class="$style.label">{{ data.name }}</span> -->
             <!-- <span>{{ data.caption }}</span> -->
