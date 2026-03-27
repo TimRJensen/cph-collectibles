@@ -19,7 +19,7 @@ localhost, dashboard.localhost {
 	}
 }
 
-cph-collectables.com, www.cph-collectables.com {
+:80 {
 	handle /api/* {
 		reverse_proxy cph-collectables-api.internal:8080
 	}
@@ -31,8 +31,6 @@ cph-collectables.com, www.cph-collectables.com {
 	handle {
 		root * /srv
 		encode zstd gzip
-		file_server {
-			disable_canonical_uris
-		}
+		file_server
 	}
 }
