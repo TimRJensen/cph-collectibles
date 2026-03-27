@@ -65,12 +65,9 @@ export type APIResult<E extends Endpoints>
     : E extends `/api/v1/checkout/${string}` ? AnyResult<CheckoutResult>
     : never;
 
-
-const url = import.meta.env.VITE_BASE_URL;
-
 export async function request<E extends Endpoints>(endpoint: E, method: string, body: any = null): Promise<APIResult<E>> {
     try {
-        const response = await fetch(url + endpoint, {
+        const response = await fetch(endpoint, {
             method,
             body,
         });
