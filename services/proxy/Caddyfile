@@ -24,8 +24,8 @@ cph-collectibles.com {
 		reverse_proxy cph-collectibles-api.internal:8080
 	}
 
-	handle_path /fs/* {
-		reverse_proxy cph-collectibles-fs.internal:8081
+	handle /fs/* {
+		reverse_proxy cph-collectables-fs.internal:8081
 	}
 
 	handle {
