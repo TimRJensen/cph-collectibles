@@ -1,0 +1,86 @@
+#header {
+    anchor-name: --header;
+    position: sticky;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+    width: 100%;
+    min-width: 100%;
+    height: calc(32px + 2rem);
+    top: 0;
+    padding: 1rem 1rem;
+    box-shadow: -2px 2px 5px var(--card-border-color);
+    background: #000;
+    z-index: 99;
+}
+
+#header::before {
+    content: "";
+    position: absolute;
+    clip-path: polygon(32px 0, 100% 0, calc(100% - 32px) 100%, 0 100%);
+    width: calc(100% - 132px);
+    height: 100%;
+    left: 128px;
+    top: 0;
+    background: #FFFDF8;
+}
+
+.logo-container {
+    background: #000;
+    height: fit-content;
+}
+
+.logo {
+    position: absolute;
+    display: block;
+    width: auto;
+    height: 32px;
+    object-fit: contain;
+    background: none;
+}
+
+#controlbar {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+    margin-left: auto;
+    padding: 0 1rem;
+}
+
+@media screen and (min-width: 768px) {
+    #header {
+        height: calc(64px + 2rem);
+        padding-right: 2rem;
+    }
+
+    #header::before {
+        content: "";
+        position: absolute;
+        clip-path: polygon(32px 0, 100% 0, calc(100% - 32px) 100%, 0 100%);
+        width: calc(100% - 242px);
+        height: 100%;
+        left: 232px;
+        top: 0;
+        background: #FFFDF8;
+    }
+
+    .logo {
+        height: 64px;
+    }
+
+    #controlbar {
+        width: 50vw;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    #controlbar {
+        margin: auto;
+    }
+}
+
+@media screen and (min-width: 1536px) {
+    #controlbar {
+        width: min(1280px, 50vw);
+    }
+}

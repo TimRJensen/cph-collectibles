@@ -1,0 +1,20 @@
+#main {
+    display: flex;
+    flex-flow: row wrap;
+    width: 100%;
+    margin: auto;
+    margin-top: 3rem;
+    gap: 3rem;
+}
+
+@media screen and (min-width: 1024px) {
+    #main {
+        width: 90dvw;
+    }
+}
+
+@media screen and (min-width: 1536px) {
+    #main {
+        width: min(1280px, 50vw);
+    }
+}

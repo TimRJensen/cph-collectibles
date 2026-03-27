@@ -1,0 +1,35 @@
+FROM golang:1.25.5-alpine AS builder
+
+WORKDIR /build
+COPY db ./db
+
+WORKDIR /build/src
+COPY api/go.mod api/go.sum api/go.work ./
+RUN go mod download
+
+COPY api ./
+
+RUN mkdir -p ./out && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o ./out/program ./cmd/api && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o ./out/seedctl ./cmd/seedctl
+
+FROM busybox:1.37.0
+
+RUN addgroup -g 10001 -S app && adduser -u 10001 -S -G app app
+
+WORKDIR /app
+
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /build/src/out/program /app/program
+COPY --from=builder /build/src/out/seedctl /app/seedctl
+COPY api/entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh && \
+    chown -R app:app /app
+
+EXPOSE 8080
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/app/program"]

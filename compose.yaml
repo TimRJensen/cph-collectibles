@@ -1,0 +1,119 @@
+name: cph_collectibles
+
+services:
+  db:
+    container_name: db
+    image: db
+    build:
+      context: ./services
+      dockerfile: ./db/dockerfile
+      tags:
+        - "db:latest"
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - cph_collectibles_net
+    volumes:
+      - db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  api:
+    container_name: api
+    image: api
+    build:
+      context: ./services
+      dockerfile: ./api/dockerfile
+      tags:
+        - "api:latest"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      STRIPE_PRIVATE_KEY: ${STRIPE_PRIVATE_KEY}
+      STRIPE_PUBLISH_KEY: ${STRIPE_PUBLISH_KEY}
+      STRIPE_WEBHOOK_KEY: ${STRIPE_WEBHOOK_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM: ${RESEND_FROM}
+      APP_HOST: ${APP_HOST}
+      APP_DASHBOARD_HOST: ${APP_DASHBOARD_HOST}
+      API_URL: ${API_URL}
+      FS_URL: ${FS_URL}
+    ports: 
+      - "8080"
+    networks:
+      - cph_collectibles_net
+    volumes:
+      - assets:/app/assets
+    develop:
+      watch:
+        - action: rebuild
+          path: ./services/api
+    depends_on:
+      db:
+        condition: service_healthy
+  fs:
+    container_name: fs
+    image: fs
+    build:
+      context: ./services
+      dockerfile: ./fs/dockerfile
+      tags:
+        - "fs:latest"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      APP_HOST: ${APP_HOST}
+      APP_DASHBOARD_HOST: ${APP_DASHBOARD_HOST}
+      API_URL: ${API_URL}
+      FS_URL: ${FS_URL}
+    ports: 
+      - "8081"
+    networks:
+      - cph_collectibles_net
+    volumes:
+      - assets:/app/assets
+    develop:
+      watch:
+        - action: rebuild
+          path: ./services/fs
+    depends_on:
+      db:
+        condition: service_healthy
+  caddy:
+    container_name: caddy
+    image: caddy:2.11-alpine
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - cph_collectibles_net
+    volumes:
+      - ./services/proxy:/etc/caddy
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+networks:
+  cph_collectibles_net:
+    name: cph_collectibles_net
+    driver: bridge
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
+  assets:

@@ -1,0 +1,42 @@
+# --- Data (CRITICAL) ---
+services/api/data/
+services/api/data/*
+
+# --- Node / Vite ---
+node_modules/
+dist/
+build/
+.vite/
+.cache/
+
+# --- Env ---
+.env
+.env.*
+!.env.example
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- Editor ---
+.vscode/
+.idea/
+
+# --- Go ---
+bin/
+out/
+*.exe
+*.test
+*.prof
+
+# --- Go workspace ---
+go.work.sum
+
+# --- Coverage ---
+coverage.out

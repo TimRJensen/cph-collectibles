@@ -1,0 +1,27 @@
+SELECT poster_insert(
+   v.arg_id,
+   v.arg_raw_id,
+   v.arg_heading,
+   v.arg_body,
+   v.arg_width,
+   v.arg_height,
+   v.arg_origin_country,
+   v.arg_origin_year,
+   v.arg_condition_rating,
+   v.arg_condition_notes
+)
+FROM (VALUES {{range $i, $data := $ }}
+    ({{$data.ToSql}}){{ if lt (add $i 1) (len $) }},{{end}}{{ end }}
+)
+AS v(
+    arg_id,
+    arg_raw_id,
+    arg_heading,
+    arg_body,
+    arg_width,
+    arg_height,
+    arg_origin_country,
+    arg_origin_year,
+    arg_condition_rating,
+    arg_condition_notes
+);

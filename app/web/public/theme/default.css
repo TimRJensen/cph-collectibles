@@ -1,0 +1,19 @@
+:root {
+    --primary: #FFFDF8;
+    --secondary: #000;
+    --card-border-color: #B5B8BC;
+    --card-border-size: 2px;
+    --card-border-radius: 20px;
+    --btn-background: #000;
+    --btn-color: #FFF;
+    --btn-border-color: #B5B8BC;
+    --btn-border-size: 1px;
+    --btn-border-radius: 5px;
+    --input-background: #FFF;
+    --input-color: #6B7280;
+    --input-border-color: #B5B8BC;
+    --input-border-size: 1px;
+    --input-border-radius: 5px;
+
+    --txt-primary-color: #000;
+}

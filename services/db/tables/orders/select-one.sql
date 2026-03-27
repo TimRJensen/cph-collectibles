@@ -1,0 +1,1 @@
+SELECT id, payment_intent_id, status, total, created_at, updated_at FROM orders WHERE id = $1;

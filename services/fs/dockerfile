@@ -1,0 +1,23 @@
+FROM golang:1.25.5-alpine AS builder
+
+WORKDIR /build/src
+COPY fs/go.mod fs/go.work ./
+RUN go mod download
+
+COPY fs .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o ./out/program .
+
+FROM busybox:1.37.0
+# Create non-root group/user
+RUN addgroup -g 10001 -S app && adduser -u 10001 -S -G app app
+
+WORKDIR /app
+COPY --from=builder /build/src/out/program .
+COPY fs/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown -R app:app /app
+
+EXPOSE 8081
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/app/program"]

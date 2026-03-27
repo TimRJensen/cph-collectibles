@@ -1,0 +1,89 @@
+/*
+    General rules
+*/
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("../theme/default.css");
+
+*,
+::before,
+::after {
+    box-sizing: border-box;
+}
+
+:root {
+    font-family: Roboto;
+    font-size: 18px;
+    line-height: 1.25;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+    margin: 0;
+    min-width: 320px;
+    height: auto;
+    min-height: 100vh;
+}
+
+body {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: space-between;
+    overflow: hidden auto;
+}
+
+img,
+picture,
+svg,
+canvas,
+video {
+    display: block;
+    max-width: 100%;
+    transform-origin: center center;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+button,
+input,
+select,
+textarea {
+    width: inherit;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+dialog {
+    margin: 0 auto;
+    border: none;
+    overflow: hidden;
+}
+
+a,
+a:visited {
+    all: unset;
+    cursor: pointer;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+hr {
+    all: unset;
+    display: block;
+    width: 100%;
+    margin: 0.5rem auto;
+    border: 1px solid #FFF;
+    line-height: normal;
+}

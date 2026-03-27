@@ -1,0 +1,46 @@
+#main {
+    display: flex;
+    flex-flow: row wrap;
+    width: 100%;
+    min-height: 512px;
+    margin: auto;
+    margin-top: 3rem;
+    gap: 3rem;
+}
+
+.article {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    width: 100%;
+    min-height: 100%;
+    padding: 1rem;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 300;
+    box-shadow: -1px 1px 4px 0 var(--card-border-color);
+    background: var(--primary);
+}
+
+.smiley {
+    font-size: 1.75rem;
+}
+
+@media screen and (min-width: 768px) {
+    .article {
+        border-radius: var(--card-border-radius);
+
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    #main {
+        width: 90dvw;
+    }
+}
+
+@media screen and (min-width: 1536px) {
+    #main {
+        width: 1280px;
+    }
+}
