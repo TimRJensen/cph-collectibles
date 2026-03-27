@@ -19,7 +19,23 @@ localhost, dashboard.localhost {
 	}
 }
 
-cph-collectables.com, cph-collectibles-public.sliplane.app {
+cph-collectibles.com {
+	handle /api/* {
+		reverse_proxy cph-collectibles-api.internal:8080
+	}
+
+	handle_path /fs/* {
+		reverse_proxy cph-collectibles-fs.internal:8081
+	}
+
+	handle {
+		root * /srv
+		encode zstd gzip
+		file_server
+	}
+}
+
+:80 {
 	handle /api/* {
 		reverse_proxy cph-collectibles-api.internal:8080
 	}
