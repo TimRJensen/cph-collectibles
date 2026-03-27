@@ -31,7 +31,9 @@ cph-collectables.com, www.cph-collectables.com {
 	handle {
 		root * /srv
 		encode zstd gzip
-		file_server
+		file_server {
+			disable_canonical_uris
+		}
 	}
 }
 
