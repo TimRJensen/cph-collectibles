@@ -9,8 +9,33 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+func init() {
+	if _, ok := os.LookupEnv("DB_HOST"); !ok {
+		log.Fatalf("env %s is nil", "DB_HOST")
+	}
+	if _, ok := os.LookupEnv("DB_PORT"); !ok {
+		log.Fatalf("env %s is nil", "DB_PORT")
+	}
+	if _, ok := os.LookupEnv("DB_USER"); !ok {
+		log.Fatalf("env %s is nil", "DB_USER")
+	}
+	if _, ok := os.LookupEnv("DB_PASSWORD"); !ok {
+		log.Fatalf("env %s is nil", "DB_PASSWORD")
+	}
+	if _, ok := os.LookupEnv("DB_NAME"); !ok {
+		log.Fatalf("env %s is nil", "DB_NAME")
+	}
+}
+
+type Connection interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
 
 type Config struct {
 	Host     string
@@ -47,15 +72,15 @@ func (c Config) DSN() string {
 	return u.String()
 }
 
-type Pool struct {
+type DB struct {
 	pool *pgxpool.Pool
 }
 
-func (p *Pool) Close() {
+func (p *DB) Close() {
 	p.pool.Close()
 }
 
-func (p *Pool) Transaction(ctx context.Context) pgx.Tx {
+func (p *DB) Transaction(ctx context.Context) pgx.Tx {
 	tx, err := p.pool.Begin(ctx)
 	if err != nil {
 		log.Println(fmt.Errorf("db.Transaction: %w", err))
@@ -63,8 +88,20 @@ func (p *Pool) Transaction(ctx context.Context) pgx.Tx {
 	return tx
 }
 
-func NewPool(cfg Config) (*Pool, error) {
-	p := new(Pool)
+func (p *DB) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
+	return p.pool.Exec(ctx, sql, args...)
+}
+
+func (p *DB) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	return p.pool.Query(ctx, sql, args...)
+}
+
+func (p *DB) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
+	return p.pool.QueryRow(ctx, sql, args...)
+}
+
+func NewPool(cfg Config) (*DB, error) {
+	p := new(DB)
 	if pool, err := pgxpool.New(context.Background(), cfg.DSN()); err != nil {
 		return nil, err
 	} else {
@@ -72,8 +109,3 @@ func NewPool(cfg Config) (*Pool, error) {
 	}
 	return p, nil
 }
-
-/*
-
-
- */

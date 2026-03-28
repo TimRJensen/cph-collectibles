@@ -55,7 +55,7 @@ func validAction(v *stripe.PaymentIntentNextAction) bool {
 	}
 }
 
-func HandleWith(conn *db.Pool) func(w http.ResponseWriter, r *http.Request) {
+func HandleWith(conn *db.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:

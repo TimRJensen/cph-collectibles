@@ -1,6 +1,7 @@
-type Endpoints =
-    | "/api/v1/posters"
-    | `/api/v1/posters/${string}`
+export type Endpoint =
+    | "/api/v1/inventory"
+    | `/api/v1/inventory?${string}`
+    | `/api/v1/inventory/${string}`
     | "/api/v1/checkout"
     | `/api/v1/checkout/${string}`;
 
@@ -58,14 +59,15 @@ export type PosterResult = {
     files: Array<{ id: string, url: string }>,
 }
 
-export type APIResult<E extends Endpoints>
-    = E extends "/api/v1/posters" ? AnyResult<PosterResult>
-    : E extends `/api/v1/posters/${string}` ? AnyResult<PosterResult>
+export type APIResult<E extends Endpoint>
+    = E extends "/api/v1/inventory" ? AnyResult<PosterResult>
+    : E extends `/api/v1/inventory?${string}` ? AnyResult<PosterResult>
+    : E extends `/api/v1/inventory/${string}` ? AnyResult<PosterResult>
     : E extends "/api/v1/checkout" ? AnyResult<CheckoutResult>
     : E extends `/api/v1/checkout/${string}` ? AnyResult<CheckoutResult>
     : never;
 
-export async function request<E extends Endpoints>(endpoint: E, method: string, body: any = null): Promise<APIResult<E>> {
+export async function request<E extends Endpoint>(endpoint: E, method: string, body: any = null): Promise<APIResult<E>> {
     try {
         const response = await fetch(endpoint, {
             method,

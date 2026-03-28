@@ -19,7 +19,7 @@ watch(CartStore.len, () => {
 }, { immediate: true });
 
 onMounted(async () => {
-    const res = await request(`/api/v1/posters/${route.params.id}`, "GET");
+    const res = await request(`/api/v1/inventory/${route.params.id}`, "GET");
     if (res.error) {
         console.log(res.error);
         return;

@@ -17,17 +17,14 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-type SeedConfig struct {
-	CSVPath   string
-	ZIPPath   string
-	AssetsDir string
-	FSURL     string
+func seedDB(p *db.DB, pathToCSV string) (seed.Data, error) {
+	return seed.SeedCSV(pathToCSV, p)
 }
 
-func SeedDB(p *db.Pool, cfg SeedConfig) error {
-	r, err := zip.OpenReader(cfg.ZIPPath)
+func seedFiles(p *db.DB, data seed.Data, pathToZIP, dst string) error {
+	r, err := zip.OpenReader(pathToZIP)
 	if err != nil {
-		return fmt.Errorf("open zip: %w", err)
+		return fmt.Errorf("seedFiles: %w", err)
 	}
 	defer r.Close()
 
@@ -41,25 +38,19 @@ func SeedDB(p *db.Pool, cfg SeedConfig) error {
 		imgs[matches[1]] = f
 	}
 
-	data, err := seed.SeedCSV(cfg.CSVPath, p)
+	filedir, err := filepath.Abs(dst)
 	if err != nil {
-		return fmt.Errorf("seed csv: %w", err)
-	}
-
-	filedir, err := filepath.Abs(cfg.AssetsDir)
-	if err != nil {
-		return fmt.Errorf("abs assets dir: %w", err)
+		return fmt.Errorf("seedFiles: %w", err)
 	}
 
 	ctx := context.Background()
 	tx := p.Transaction(ctx)
-
 	for _, d := range data {
 		id, raw := d.Id.String(), d.Meta.RawId
 
 		path := filepath.Join(filedir, id)
 		if err := os.MkdirAll(path, 0o777); err != nil {
-			return fmt.Errorf("mkdir %s: %w", path, err)
+			return fmt.Errorf("seedFiles: %w", err)
 		}
 
 		v, ok := imgs[raw]
@@ -70,27 +61,23 @@ func SeedDB(p *db.Pool, cfg SeedConfig) error {
 		dstPath := filepath.Join(path, fmt.Sprintf("%s.png", raw))
 		dst, err := os.Create(dstPath)
 		if err != nil {
-			return fmt.Errorf("create dst %s: %w", dstPath, err)
+			return fmt.Errorf("seedFiles: %w", err)
 		}
 
 		src, err := v.Open()
 		if err != nil {
 			dst.Close()
-			return fmt.Errorf("open zip entry %s: %w", v.Name, err)
+			return fmt.Errorf("seedFiles: %w", err)
 		}
 
-		_, copyErr := io.Copy(dst, src)
-		closeDstErr := dst.Close()
-		closeSrcErr := src.Close()
-
-		if copyErr != nil {
-			return fmt.Errorf("copy image %s: %w", raw, copyErr)
+		if _, err = io.Copy(dst, src); err != nil {
+			return fmt.Errorf("seedFiles: %w", err)
 		}
-		if closeDstErr != nil {
-			return fmt.Errorf("close dst %s: %w", dstPath, closeDstErr)
+		if err = dst.Close(); err != nil {
+			return fmt.Errorf("seedFiles: %w", err)
 		}
-		if closeSrcErr != nil {
-			return fmt.Errorf("close src %s: %w", v.Name, closeSrcErr)
+		if err = src.Close(); err != nil {
+			return fmt.Errorf("seedFiles: %w", err)
 		}
 
 		rec := files.Data{}
@@ -99,29 +86,24 @@ func SeedDB(p *db.Pool, cfg SeedConfig) error {
 		rec.URL = fmt.Sprintf("/fs/assets/%s/%s.png", id, raw)
 
 		if err := files.Insert(tx, ctx, &rec); err != nil {
-			return fmt.Errorf("insert file row for %s: %w", raw, err)
+			return fmt.Errorf("seedFiles: %w", err)
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("commit: %w", err)
+		return fmt.Errorf("seedFiles: %w", err)
 	}
 
 	return nil
 }
 
-func DefaultSeedConfig() SeedConfig {
-	cwd, _ := os.Getwd()
-	return SeedConfig{
-		CSVPath:   filepath.Join(cwd, "data", "posters.csv"),
-		ZIPPath:   filepath.Join(cwd, "data", "posters.zip"),
-		AssetsDir: filepath.Join(cwd, "assets"),
-		FSURL:     os.Getenv("FS_URL"),
+func MustBootstrap(p *db.DB, pathToCSV, pathToZIP, dst string) {
+	data, err := seedDB(p, pathToCSV)
+	if err != nil {
+		log.Fatal(err)
 	}
-}
-
-func MustSeedDB(p *db.Pool, cfg SeedConfig) {
-	if err := SeedDB(p, cfg); err != nil {
+	err = seedFiles(p, data, pathToZIP, dst)
+	if err != nil {
 		log.Fatal(err)
 	}
 }

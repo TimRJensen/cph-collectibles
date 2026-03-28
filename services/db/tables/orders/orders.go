@@ -4,8 +4,8 @@ import (
 	"context"
 	_ "embed"
 
+	"github.com/cph-collectibles/db"
 	"github.com/cph-collectibles/db/wrappers"
-	"github.com/jackc/pgx/v5"
 )
 
 type Data struct {
@@ -20,8 +20,8 @@ type Data struct {
 //go:embed insert.sql
 var insert string
 
-func Insert(conn pgx.Tx, ctx context.Context, data *Data) error {
-	_, err := conn.Exec(ctx, insert,
+func Insert(db db.Connection, ctx context.Context, data *Data) error {
+	_, err := db.Exec(ctx, insert,
 		data.Id.String(),
 		data.Total,
 	)
@@ -31,16 +31,16 @@ func Insert(conn pgx.Tx, ctx context.Context, data *Data) error {
 //go:embed update.sql
 var update string
 
-func Update(conn pgx.Tx, ctx context.Context, data *Data) error {
-	_, err := conn.Exec(ctx, update, data.Id.String(), data.PaymentIntentId, data.Status)
+func Update(db db.Connection, ctx context.Context, data *Data) error {
+	_, err := db.Exec(ctx, update, data.Id.String(), data.PaymentIntentId, data.Status)
 	return err
 }
 
 //go:embed select-one.sql
 var one string
 
-func SelectOne(conn pgx.Tx, ctx context.Context, id string) (Data, error) {
-	record := conn.QueryRow(ctx, one, id)
+func SelectOne(db db.Connection, ctx context.Context, id string) (Data, error) {
+	record := db.QueryRow(ctx, one, id)
 	d := Data{}
 	err := record.Scan(&d.Id, &d.PaymentIntentId, &d.Status, &d.Total, &d.CreatedAt, &d.UpdatedAt)
 	if err != nil {

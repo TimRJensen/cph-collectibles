@@ -11,9 +11,9 @@ COPY api ./
 
 RUN mkdir -p ./out && \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -ldflags="-s -w" -o ./out/program ./cmd/api && \
+    go build -ldflags="-s -w" -o ./out/program ./cmd/program && \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -ldflags="-s -w" -o ./out/seedctl ./cmd/seedctl
+    go build -ldflags="-s -w" -o ./out/bootstrap ./cmd/bootstrap
 
 FROM busybox:1.37.0
 
@@ -23,7 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /build/src/out/program /app/program
-COPY --from=builder /build/src/out/seedctl /app/seedctl
+COPY --from=builder /build/src/out/bootstrap /app/bootstrap
 COPY api/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh && \

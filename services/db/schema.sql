@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS posters (
+CREATE TABLE IF NOT EXISTS inventory (
     id varchar(26) PRIMARY KEY,
     raw_id varchar(16) UNIQUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -14,13 +14,13 @@ BEGIN
     END IF;
 END $$;
 CREATE TABLE IF NOT EXISTS ratings (
-    poster_id varchar(26) PRIMARY KEY REFERENCES posters(id) ON DELETE CASCADE,
+    inventory_id varchar(26) PRIMARY KEY REFERENCES inventory(id) ON DELETE CASCADE,
     rating rating DEFAULT 'unspecified',
     notes text DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS costs (
-    poster_id varchar(26) PRIMARY KEY REFERENCES posters(id) ON DELETE CASCADE,
+    inventory_id varchar(26) PRIMARY KEY REFERENCES inventory(id) ON DELETE CASCADE,
     raw_amount numeric(10, 2) DEFAULT 0.0,
     raw_vat numeric(10, 2) DEFAULT 0.0,
     raw_total numeric(10, 2) GENERATED ALWAYS AS (raw_amount + raw_vat) STORED,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS costs (
 );
 
 CREATE TABLE IF NOT EXISTS details (
-    poster_id varchar(26) PRIMARY KEY REFERENCES posters(id) ON DELETE CASCADE,
+    inventory_id varchar(26) PRIMARY KEY REFERENCES inventory(id) ON DELETE CASCADE,
     heading text DEFAULT '',
     body text DEFAULT '',
     width numeric(6, 2) DEFAULT 0.0,
@@ -41,52 +41,19 @@ CREATE TABLE IF NOT EXISTS details (
 
 CREATE TABLE IF NOT EXISTS files (
     id varchar(26) PRIMARY KEY,
-    poster_id varchar(26) REFERENCES posters(id) ON DELETE CASCADE,
+    inventory_id varchar(26) REFERENCES inventory(id) ON DELETE CASCADE,
     url varchar(255) DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE OR REPLACE FUNCTION poster_insert(
-    arg_id varchar(26),
-    arg_raw_id varchar(16),
-    arg_raw_amount numeric(10, 2),
-    arg_raw_vat numeric(10, 2),
-    arg_heading text,
-    arg_body text,
-    arg_width numeric(6, 2),
-    arg_height numeric(6, 2),
-    arg_origin_source varchar(32),
-    arg_origin_year varchar(16),
-    arg_condition_rating rating,
-    arg_condition_notes text
-) RETURNS void AS $$
-BEGIN
-    INSERT INTO posters (id, raw_id)
-    VALUES (arg_id, arg_raw_id);
-
-    INSERT INTO costs (poster_id, raw_amount, raw_vat)
-    VALUES (arg_id, arg_raw_amount, arg_raw_vat);
-
-    INSERT INTO details (
-        poster_id, heading, body, width, height, origin_source, origin_year
-    )
-    VALUES (
-        arg_id, arg_heading, arg_body, arg_width, arg_height, arg_origin_source, arg_origin_year
-    );
-
-    INSERT INTO ratings (poster_id, rating, notes)
-    VALUES (arg_id, arg_condition_rating, arg_condition_notes);
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE VIEW poster_view AS
+CREATE OR REPLACE VIEW inventory_view AS
 SELECT
-    p.id,
+    i.id,
     jsonb_build_object(
-        'rawId', p.raw_id,
-        'createdAt', p.created_at,
-        'updatedAt', p.updated_at
+        'rawId', i.raw_id,
+        'createdAt', i.created_at,
+        'updatedAt', i.updated_at
     ) AS meta,
     jsonb_build_object(
         'rawAmount', c.raw_amount,
@@ -110,19 +77,20 @@ SELECT
         'notes', r.notes
     ) AS condition,
     COALESCE(f.files, '[]'::jsonb) AS files
-FROM posters p
-LEFT JOIN details d ON d.poster_id = p.id
-LEFT JOIN costs c ON c.poster_id = p.id
-LEFT JOIN ratings r ON r.poster_id = p.id
+FROM inventory i
+LEFT JOIN details d ON d.inventory_id = i.id
+LEFT JOIN costs c ON c.inventory_id = i.id
+LEFT JOIN ratings r ON r.inventory_id = i.id
 LEFT JOIN LATERAL (
     SELECT jsonb_agg(
         jsonb_build_object('id', f.id, 'url', f.url)
         ORDER BY f.created_at
     ) AS files
     FROM files f
-    WHERE f.poster_id = p.id
+    WHERE f.inventory_id = i.id
 ) f ON true;
 
+-- orders
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'status') THEN
@@ -140,8 +108,37 @@ CREATE TABLE IF NOT EXISTS orders (
 
 CREATE TABLE IF NOT EXISTS order_items (
     order_id varchar(26) REFERENCES orders(id) ON DELETE CASCADE,
-    poster_id varchar(26) REFERENCES posters(id) ON DELETE RESTRICT,
-    PRIMARY KEY (order_id, poster_id)
+    inventory_id varchar(26) REFERENCES inventory(id) ON DELETE RESTRICT,
+    PRIMARY KEY (order_id, inventory_id)
 );
+
+CREATE TABLE IF NOT EXISTS order_shipping (
+    order_id varchar(26) PRIMARY KEY REFERENCES orders(id) ON DELETE CASCADE,
+    first_name text DEFAULT '',
+    last_name text DEFAULT '',
+    address_line1 text DEFAULT '',
+    address_line2 text DEFAULT '',
+    postal_code int DEFAULT 0,
+    city text DEFAULT '',
+    state text DEFAULT '',
+    country text DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_files_inventory_id_created_at
+ON files (inventory_id, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_details_heading_fts
+ON details
+USING GIN (to_tsvector('simple', heading));
+
+CREATE INDEX IF NOT EXISTS idx_orders_status
+ON orders (status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_payment_intent_id
+ON orders (payment_intent_id)
+WHERE payment_intent_id <> '';
+
+CREATE INDEX IF NOT EXISTS idx_orders_created_at
+ON orders (created_at);
 
 COMMIT;

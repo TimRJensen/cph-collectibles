@@ -14,7 +14,9 @@ import (
 	"github.com/stripe/stripe-go/v84/webhook"
 )
 
-func HandleWith(conn *db.Pool) http.HandlerFunc {
+var secret = os.Getenv("STRIPE_WEBHOOK_KEY")
+
+func HandleWith(db *db.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const maxBodyBytes = int64(1 << 20) // 1 MB
 		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
@@ -26,8 +28,6 @@ func HandleWith(conn *db.Pool) http.HandlerFunc {
 		}
 
 		sig := r.Header.Get("Stripe-Signature")
-		secret := os.Getenv("STRIPE_WEBHOOK_KEY")
-
 		event, err := webhook.ConstructEvent(payload, sig, secret)
 		if err != nil {
 			v1.Error(w, http.StatusBadRequest, fmt.Errorf("webhook.HandleWith: %w", err))
@@ -48,17 +48,17 @@ func HandleWith(conn *db.Pool) http.HandlerFunc {
 		switch event.Type {
 		case "payment_intent.succeeded":
 			ctx := r.Context()
-			tx := conn.Transaction(ctx)
+			tx := db.Transaction(ctx)
 			defer tx.Rollback(ctx)
 
-			order, err := orders.SelectOne(tx, ctx, pi.Metadata["order_id"])
+			order, err := orders.SelectOne(db, ctx, pi.Metadata["order_id"])
 			if err != nil {
 				v1.Error(w, http.StatusBadRequest, fmt.Errorf("webhook.HandleWith: %w", err))
 				return
 			}
 			order.Status = "paid"
 
-			err = orders.Update(tx, ctx, &order)
+			err = orders.Update(db, ctx, &order)
 			if err != nil {
 				v1.Error(w, http.StatusBadRequest, fmt.Errorf("webhook.HandleWith: %w", err))
 				return
@@ -72,17 +72,17 @@ func HandleWith(conn *db.Pool) http.HandlerFunc {
 			v1.Success(w, http.StatusOK, []any{})
 		case "payment_intent.payment_failed":
 			ctx := r.Context()
-			tx := conn.Transaction(ctx)
+			tx := db.Transaction(ctx)
 			defer tx.Rollback(ctx)
 
-			order, err := orders.SelectOne(tx, ctx, pi.Metadata["order_id"])
+			order, err := orders.SelectOne(db, ctx, pi.Metadata["order_id"])
 			if err != nil {
 				v1.Error(w, http.StatusBadRequest, fmt.Errorf("webhook.HandleWith: %w", err))
 				return
 			}
 			order.Status = "cancelled"
 
-			err = orders.Update(tx, ctx, &order)
+			err = orders.Update(db, ctx, &order)
 			if err != nil {
 				v1.Error(w, http.StatusBadRequest, fmt.Errorf("webhook.HandleWith: %w", err))
 				return

@@ -1,0 +1,1 @@
+SELECT id, meta, cost, detail, condition, files FROM inventory_view;

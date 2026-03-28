@@ -10,7 +10,7 @@ import Spinner from "./Spinner.vue";
 // state
 const data = ref<Array<PosterResult>>();
 onMounted(async () => {
-    const res = await request("/api/v1/posters", "GET");
+    const res = await request("/api/v1/inventory", "GET");
     if (res.error) {
         console.log(res.error);
         return;

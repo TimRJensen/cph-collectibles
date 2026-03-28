@@ -4,8 +4,8 @@ import (
 	"context"
 	_ "embed"
 
+	"github.com/cph-collectibles/db"
 	"github.com/cph-collectibles/db/wrappers"
-	"github.com/jackc/pgx/v5"
 )
 
 type Data struct {
@@ -19,8 +19,8 @@ type Data struct {
 //go:embed insert.sql
 var insert string
 
-func Insert(conn pgx.Tx, ctx context.Context, data *Data) error {
-	_, err := conn.Exec(ctx, insert,
+func Insert(db db.Connection, ctx context.Context, data *Data) error {
+	_, err := db.Exec(ctx, insert,
 		data.Id.String(),
 		data.PosterId.String(),
 		data.URL,

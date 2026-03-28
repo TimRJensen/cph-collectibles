@@ -6,10 +6,11 @@ import (
 	"os"
 )
 
+var host = os.Getenv("HOST")
+
 func WithCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("origin")
-		host := os.Getenv("APP_HOST")
 		if origin == fmt.Sprintf("https://%s", host) || origin == fmt.Sprintf("https://www.%s", host) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")

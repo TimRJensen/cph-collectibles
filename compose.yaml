@@ -20,7 +20,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -43,11 +43,8 @@ services:
       STRIPE_WEBHOOK_KEY: ${STRIPE_WEBHOOK_KEY}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM: ${RESEND_FROM}
-      APP_HOST: ${APP_HOST}
-      APP_DASHBOARD_HOST: ${APP_DASHBOARD_HOST}
-      API_URL: ${API_URL}
-      FS_URL: ${FS_URL}
-    ports: 
+      HOST: ${HOST}
+    ports:
       - "8080"
     networks:
       - cph_collectibles_net
@@ -68,17 +65,7 @@ services:
       dockerfile: ./fs/dockerfile
       tags:
         - "fs:latest"
-    environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      APP_HOST: ${APP_HOST}
-      APP_DASHBOARD_HOST: ${APP_DASHBOARD_HOST}
-      API_URL: ${API_URL}
-      FS_URL: ${FS_URL}
-    ports: 
+    ports:
       - "8081"
     networks:
       - cph_collectibles_net

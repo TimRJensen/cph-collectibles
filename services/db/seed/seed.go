@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/cph-collectibles/db"
-	"github.com/cph-collectibles/db/tables/posters"
+	"github.com/cph-collectibles/db/tables/inventory"
 	"github.com/cph-collectibles/db/wrappers"
 	"github.com/oklog/ulid/v2"
 )
@@ -50,7 +50,7 @@ func ctof(v string) float64 {
 	return ipart + fpart
 }
 
-type data []posters.Data
+type Data []inventory.Data
 
 func parseOrigin(v string) []string {
 	res := []string{"", ""}
@@ -172,8 +172,8 @@ func normalize(s string) string {
 	return s
 }
 
-func ParseCSV(r *csv.Reader) (data, error) {
-	res := data{}
+func ParseCSV(r *csv.Reader) (Data, error) {
+	res := Data{}
 
 	records, err := r.ReadAll()
 	if err != nil {
@@ -190,7 +190,7 @@ func ParseCSV(r *csv.Reader) (data, error) {
 			continue
 		}
 
-		data := posters.Data{Id: wrappers.ULID(ulid.Make())}
+		data := inventory.Data{Id: wrappers.ULID(ulid.Make())}
 		cost := ctof(record[4])
 		details := parseDetail(normalize(record[1]))
 		size := parseSize(normalize(record[2]))
@@ -220,7 +220,7 @@ func ParseCSV(r *csv.Reader) (data, error) {
 	return res, nil
 }
 
-func SeedCSV(path string, p *db.Pool) (data, error) {
+func SeedCSV(path string, db *db.DB) (Data, error) {
 	cwd, _ := os.Getwd()
 	path, err := filepath.Abs(filepath.Join(cwd, path))
 	if err != nil {
@@ -238,9 +238,9 @@ func SeedCSV(path string, p *db.Pool) (data, error) {
 	}
 
 	ctx := context.Background()
-	tx := p.Transaction(ctx)
+	tx := db.Transaction(ctx)
 	for _, d := range data {
-		if err := posters.Insert(tx, ctx, &d); err != nil {
+		if err := inventory.Insert(db, ctx, &d); err != nil {
 			tx.Rollback(ctx)
 			return nil, err
 		}

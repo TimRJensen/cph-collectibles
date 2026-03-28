@@ -10,23 +10,32 @@ import (
 
 	v1 "github.com/cph-collectibles/api/v1"
 	"github.com/cph-collectibles/db"
+	"github.com/cph-collectibles/db/tables/inventory"
 	"github.com/cph-collectibles/db/tables/orderitems"
 	"github.com/cph-collectibles/db/tables/orders"
-	"github.com/cph-collectibles/db/tables/posters"
 	"github.com/cph-collectibles/db/wrappers"
 	"github.com/oklog/ulid/v2"
 	"github.com/stripe/stripe-go/v84"
 	"github.com/stripe/stripe-go/v84/paymentintent"
 )
 
-func HandleWith(conn *db.Pool) func(w http.ResponseWriter, r *http.Request) {
+var (
+	privateKey = os.Getenv("STRIPE_PRIVATE_KEY")
+	publishKey = os.Getenv("STRIPE_PUBLISH_KEY")
+)
+
+func init() {
+	stripe.Key = privateKey
+}
+
+func HandleWith(db *db.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			v1.Success(w, http.StatusOK, struct {
 				PublishableKey string `json:"publishableKey"`
 			}{
-				PublishableKey: os.Getenv("STRIPE_PUBLISH_KEY"),
+				PublishableKey: publishKey,
 			})
 		case http.MethodPost:
 			cart := struct {
@@ -39,9 +48,8 @@ func HandleWith(conn *db.Pool) func(w http.ResponseWriter, r *http.Request) {
 			}
 
 			ctx := context.Background()
-			tx := conn.Transaction(ctx)
-			defer tx.Rollback(ctx)
-			data, err := posters.Query(tx, ctx, cart.Items)
+			tx := db.Transaction(ctx)
+			data, err := inventory.SelectMany(tx, ctx, cart.Items)
 			if err != nil {
 
 				v1.Error(w, http.StatusInternalServerError, fmt.Errorf("checkout.HandleWith: %w", err))

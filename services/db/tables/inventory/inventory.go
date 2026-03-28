@@ -1,4 +1,4 @@
-package posters
+package inventory
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cph-collectibles/db"
 	"github.com/cph-collectibles/db/wrappers"
-	"github.com/jackc/pgx/v5"
 )
 
 type meta struct {
@@ -75,8 +75,8 @@ func (d *Data) ToSql() string {
 //go:embed insert.sql
 var insert string
 
-func Insert(conn pgx.Tx, ctx context.Context, data *Data) error {
-	_, err := conn.Exec(ctx, insert,
+func Insert(db db.Connection, ctx context.Context, data *Data) error {
+	_, err := db.Exec(ctx, insert,
 		data.Id.String(),
 		data.Meta.RawId,
 		data.Cost.RawAmount,
@@ -96,8 +96,31 @@ func Insert(conn pgx.Tx, ctx context.Context, data *Data) error {
 //go:embed select-all.sql
 var all string
 
-func SelectAll(conn pgx.Tx, ctx context.Context) ([]*Data, error) {
-	records, err := conn.Query(ctx, all)
+func SelectAll(db db.Connection, ctx context.Context) ([]*Data, error) {
+	records, err := db.Query(ctx, all)
+	if err != nil {
+		return nil, err
+	}
+	defer records.Close()
+
+	data := []*Data{}
+	for records.Next() {
+		d := &Data{}
+		err = records.Scan(&d.Id, &d.Meta, &d.Cost, &d.Detail, &d.Condition, &d.Files)
+		if err != nil {
+			return nil, err
+		} else {
+			data = append(data, d)
+		}
+	}
+	return data, nil
+}
+
+//go:embed select-many.sql
+var many string
+
+func SelectMany(db db.Connection, ctx context.Context, ids []string) ([]*Data, error) {
+	records, err := db.Query(ctx, many, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -119,8 +142,8 @@ func SelectAll(conn pgx.Tx, ctx context.Context) ([]*Data, error) {
 //go:embed select-one.sql
 var one string
 
-func SelectOne(conn pgx.Tx, ctx context.Context, id string) (Data, error) {
-	record := conn.QueryRow(ctx, one, id)
+func SelectOne(db db.Connection, ctx context.Context, id string) (Data, error) {
+	record := db.QueryRow(ctx, one, id)
 	d := Data{}
 	err := record.Scan(&d.Id, &d.Meta, &d.Cost, &d.Detail, &d.Condition, &d.Files)
 	if err != nil {
@@ -132,8 +155,8 @@ func SelectOne(conn pgx.Tx, ctx context.Context, id string) (Data, error) {
 //go:embed query.sql
 var query string
 
-func Query(conn pgx.Tx, ctx context.Context, queries []string) ([]*Data, error) {
-	records, err := conn.Query(ctx, query, queries)
+func Query(db db.Connection, ctx context.Context, queries string) ([]*Data, error) {
+	records, err := db.Query(ctx, query, queries)
 	if err != nil {
 		return nil, err
 	}

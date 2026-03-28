@@ -1,1 +1,0 @@
-SELECT id, meta, cost, detail, condition, files FROM poster_view WHERE id = $1;
